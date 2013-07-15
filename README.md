@@ -36,6 +36,13 @@ support with emacs. The code provides the following features:
 ;; Tries to locate the gradlew wrapper, and if found create and return
 ;; a "make" string which changes into that directory and executes ./gradlew
 ;; with assembleDebug by default.
+;;
+;; How to recognize compilation errors.
+;; For some reason, the errors returned when compilation is run from within emacs is:
+;;   :TournmanApplication:compileRelease/home/marius/p/tournman/android/workspace/TournmanProject/TournmanApplication/src/main/java/net/kjeldahl/tournman/TournmanActivity.java:153: error: ';' expected
+;;
+;; This regexp captures the filename and line number by looking for ":compile.*?(filename):(lineno):
+(require 'compile)
 (add-hook 'java-mode-hook
           (lambda ()
             (unless (file-exists-p "gradlew")
@@ -45,14 +52,8 @@ support with emacs. The code provides the following features:
                      (if mkfile
                          (progn (format "cd %s; ./gradlew assembleDebug"
                             (file-name-directory mkfile) mkfile))
-                       ))))))
-;; How to recognize compilation errors.
-;; For some reason, the errors returned when compilation is run from within emacs is:
-;;   :TournmanApplication:compileRelease/home/marius/p/tournman/android/workspace/TournmanProject/TournmanApplication/src/main/java/net/kjeldahl/tournman/TournmanActivity.java:153: error: ';' expected
-;;
-;; This regexp captures the filename and line number by looking for ":compile.*?(filename):(lineno):
-(add-hook 'java-mode-hook
-          (lambda ()
-            (add-to-list 'compilation-error-regexp-alist '(":compile.*?\\(/.*?\\):\\([0-9]+\\): error" 1 2))
+                       ))))
+            (add-to-list 'compilation-error-regexp-alist '(":compile.*?\\(/.*?\\):\\([0-9]+\\): " 1 2))
             ))
+
 ```
