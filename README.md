@@ -101,5 +101,6 @@ have in mine which seems to work fine:
     (ac-config-default)
     (setq ac-ignore-case 'smart)
     (setq ac-use-menu-map t)
+    (setq ac-source-gtags)
     (define-key ac-menu-map "\C-n" 'ac-next)
     (define-key ac-menu-map "\C-p" 'ac-previous)
