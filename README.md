@@ -44,8 +44,7 @@ the current directory"
          (let ((mkfile (get-closest-pathname "gradlew")))
            (if mkfile
                (progn (format "cd %s; ./gradlew assembleDebug"
-                              mkfile))
-             ))))
+                              mkfile))))))
   (add-to-list 'compilation-error-regexp-alist '(":compile.*?\\(/.*?\\):\\([0-9]+\\): " 1 2)))
 
 (add-hook 'java-mode-hook 'gradleMake)
