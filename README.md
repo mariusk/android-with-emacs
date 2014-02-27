@@ -14,24 +14,16 @@ support with emacs. The code provides the following features:
 ;; M-x compile support
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Traverses upwards from buffer-file-name and tries to locate the gradlew wrapper.
-;; Return if found.
-;;
-;; Adapted from:
-;; http://stackoverflow.com/questions/9037833/how-to-set-the-default-directory-of-compilation-in-emacs
-(defun* get-closest-pathname (&optional (max-level 30) (file "gradlew"))
-  (let ((root (expand-file-name "/"))
-        (level 0))
-    (expand-file-name file
-                      (loop
-                       for d = default-directory then (expand-file-name ".." d)
-                       do (setq level (+ level 1))
-                       if (file-exists-p (expand-file-name file d))
-                       return d
-                       if (> level max-level)
-                       return nil
-                       if (equal d root)
-                       return nil))))
+;; Helper function to find files. Source: emacswiki
+(defun* get-closest-pathname (&optional (file "Makefile"))
+  "Determine the pathname of the first instance of FILE starting from the current directory towards root.
+This may not do the correct thing in presence of links. If it does not find FILE, then it shall return 
+the current directory"
+  (let ((root (expand-file-name "/")))
+    (loop for d = default-directory 
+          then (expand-file-name ".." d)
+          if (file-exists-p (expand-file-name file d))  return d
+          if (equal d root) return nil)))
 
 ;; Tries to locate the gradlew wrapper, and if found create and return
 ;; a "make" string which changes into that directory and executes ./gradlew
@@ -43,19 +35,35 @@ support with emacs. The code provides the following features:
 ;;
 ;; This regexp captures the filename and line number by looking for ":compile.*?(filename):(lineno):
 (require 'compile)
-(add-hook 'java-mode-hook
-          (lambda ()
-            (unless (file-exists-p "gradlew")
-              (set (make-local-variable 'compile-command)
-                   (let ((file (file-name-nondirectory buffer-file-name))
-                         (mkfile (get-closest-pathname)))
-                     (if mkfile
-                         (progn (format "cd %s; ./gradlew assembleDebug"
-                            (file-name-directory mkfile) mkfile))
-                       ))))
-            (add-to-list 'compilation-error-regexp-alist '(":compile.*?\\(/.*?\\):\\([0-9]+\\): " 1 2))
-            ))
 
+(defun gradleMake ()
+  (unless (file-exists-p "gradlew")
+    (set (make-local-variable 'compile-command)
+         (let ((mkfile (get-closest-pathname "gradlew")))
+           (if mkfile
+               (progn (format "cd %s; ./gradlew assembleDebug"
+                              (file-name-directory mkfile)))
+             ))))
+  (add-to-list 'compilation-error-regexp-alist '(":compile.*?\\(/.*?\\):\\([0-9]+\\): " 1 2)))
+
+(add-hook 'java-mode-hook 'gradleMake)
+
+```
+
+Automatic compile, install and execute on connected device
+----------------------------------------------------------
+
+In addition to generic "./gradlew assembleDebug" support which the code above demonstrates, you
+can also have customized compilation/build commands for individual projects and/or file. In my
+own projects I typically have the following at the end of my main activity source file ("MainActivity.java")
+that takes care of building, installing and executing the build on a connected device or emulator:
+
+```
+// Emulator startup: emulator -avd Dev41 -scale 0.5 -prop debug.assert=1
+//
+// Local Variables:
+// compile-command: "cd /home/marius/p/tournman/android/workspace/TournmanProject/; ./gradlew assembleDebug && adb install -r TournmanApplication/build/apk/TournmanApplication-debug-unaligned.apk && adb shell \"am start -n net.kjeldahl.tournman/.TournmanActivity\""
+// End:
 ```
 
 Auto-complete and searching imports
