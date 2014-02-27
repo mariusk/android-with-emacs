@@ -14,6 +14,8 @@ support with emacs. The code provides the following features:
 ;; M-x compile support
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(require 'cl)
+
 ;; Helper function to find files. Source: emacswiki
 (defun* get-closest-pathname (&optional (file "Makefile"))
   "Determine the pathname of the first instance of FILE starting from the current directory towards root.
@@ -49,6 +51,10 @@ the current directory"
 (add-hook 'java-mode-hook 'gradleMake)
 
 ```
+
+If you're curious about the non-lispy looking code inside the "loop" form inside the
+get-closest-pathname function, it's a ported cl (common lisp) macro. You can read more about it
+at http://www.gigamonkeys.com/book/loop-for-black-belts.html.
 
 Automatic compile, install and execute on connected device
 ----------------------------------------------------------
